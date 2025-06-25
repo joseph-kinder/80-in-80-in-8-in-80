@@ -17,6 +17,18 @@ function DailyTasks({ curriculum, progress, currentDay, onTaskComplete, onAllTas
     if (progress[currentDay]?.dailyTasks) {
       setTaskProgress(progress[currentDay].dailyTasks);
     }
+    
+    // Check if lesson was read and update task
+    if (progress[currentDay]?.lessonRead) {
+      setTaskProgress(prev => ({
+        ...prev,
+        'read-lesson': {
+          completed: true,
+          attempts: 1,
+          lastAttempt: new Date().toISOString()
+        }
+      }));
+    }
   }, [progress, currentDay]);
 
   useEffect(() => {
@@ -205,10 +217,13 @@ function DailyTasks({ curriculum, progress, currentDay, onTaskComplete, onAllTas
                 )}
               </div>
               <div className="task-description">{task.description}</div>
-              {!isCompleted && task.id !== 'daily-challenge' && (
+              {!isCompleted && task.id !== 'daily-challenge' && task.type !== 'lesson' && (
                 <button onClick={() => startTask(task)} className="start-task-btn">
                   START TASK
                 </button>
+              )}
+              {task.type === 'lesson' && !isCompleted && (
+                <span className="task-hint">Complete in daily training</span>
               )}
               {taskStatus && (
                 <div className="task-stats">

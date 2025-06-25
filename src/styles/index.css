@@ -241,3 +241,117 @@ select:focus {
 body.light-theme .prompt::before {
   color: var(--light-text-dim);
 }
+/* Matrix Theme */
+body.matrix-theme {
+  --bg: #000000;
+  --secondary-bg: #001100;
+  --text: #00ff00;
+  --secondary: #008800;
+  --primary: #00ff00;
+  --error: #ff0000;
+  --success: #00ff00;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+body.matrix-theme * {
+  text-shadow: 0 0 3px #00ff00;
+}
+
+/* Sunset Theme */
+body.sunset-theme {
+  --bg: #1a0f1f;
+  --secondary-bg: #2d1b33;
+  --text: #ffd4a3;
+  --secondary: #ff8c42;
+  --primary: #ff6b6b;
+  --error: #ff0040;
+  --success: #4ecdc4;
+  background-color: var(--bg);
+  color: var(--text);
+  background: linear-gradient(to bottom, #1a0f1f 0%, #2d1b33 50%, #4a2c47 100%);
+}
+
+/* Ocean Theme */body.ocean-theme {
+  --bg: #001f3f;
+  --secondary-bg: #003366;
+  --text: #7fdbff;
+  --secondary: #39cccc;
+  --primary: #0074d9;
+  --error: #ff4136;
+  --success: #2ecc40;
+  background-color: var(--bg);
+  color: var(--text);
+  background: linear-gradient(to bottom, #001f3f 0%, #003366 100%);
+}
+
+/* Forest Theme */
+body.forest-theme {
+  --bg: #0d1f0d;
+  --secondary-bg: #1a331a;
+  --text: #a8e6a8;
+  --secondary: #66b266;
+  --primary: #228b22;
+  --error: #ff6347;
+  --success: #32cd32;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Space Theme */
+body.space-theme {
+  --bg: #000014;
+  --secondary-bg: #0a0a2e;
+  --text: #e0e0ff;
+  --secondary: #9d9dff;
+  --primary: #6666ff;
+  --error: #ff6b6b;
+  --success: #4ecdc4;
+  background-color: var(--bg);
+  color: var(--text);
+  background-image: 
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(white 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: 0 0, 25px 25px;
+  background-color: #000014;
+}
+
+/* Retro Theme */
+body.retro-theme {
+  --bg: #1a0033;
+  --secondary-bg: #330066;
+  --text: #ff00ff;
+  --secondary: #ff66ff;
+  --primary: #00ffff;
+  --error: #ff0066;
+  --success: #00ff66;
+  background-color: var(--bg);
+  color: var(--text);
+  background: linear-gradient(135deg, #1a0033 0%, #330066 50%, #660099 100%);
+}
+
+body.retro-theme * {
+  text-shadow: 2px 2px 0px #00ffff, -2px -2px 0px #ff00ff;
+}
+
+/* Update CSS variables for dynamic theming */
+body {
+  --bg: var(--dark-bg);
+  --secondary-bg: var(--dark-surface);
+  --text: var(--dark-text);
+  --secondary: var(--dark-text-dim);
+  --primary: var(--dark-accent);
+  --error: var(--dark-error);
+  --success: var(--dark-success);
+}
+
+body.light-theme {
+  --bg: var(--light-bg);
+  --secondary-bg: var(--light-surface);
+  --text: var(--light-text);
+  --secondary: var(--light-text-dim);
+  --primary: var(--light-accent);
+  --error: var(--light-error);
+  --success: var(--light-success);
+}

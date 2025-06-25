@@ -6,21 +6,40 @@ import MockTest from './components/MockTest';
 import Progress from './components/Progress';
 import Login from './components/Login';
 import Navigation from './components/Navigation';
+import Gamification from './components/Gamification';
 import { generateFullCurriculum } from './data/curriculum';
-import { supabase, getProfile, getProgress, updateProgress as updateSupabaseProgress, updateCurrentDay } from './lib/supabase';
+import { 
+  supabase, 
+  getProfile, 
+  getProgress, 
+  updateProgress as updateSupabaseProgress, 
+  updateCurrentDay,
+  getGamificationData,
+  updateGamification 
+} from './lib/supabase';
+import { 
+  initializeGamification, 
+  checkAchievements, 
+  XP_REWARDS, 
+  getLevelFromXP 
+} from './data/gamification';
 import './styles/App.css';
 
 function App() {
   const [user, setUser] = useState(null);
   const [curriculum, setCurriculum] = useState(null);
   const [progress, setProgress] = useState({});
-  const [theme, setTheme] = useState('light');
+  const [gamificationData, setGamificationData] = useState(initializeGamification());
+  const [theme, setTheme] = useState('dark');
   const [loading, setLoading] = useState(true);
 
   // Apply theme immediately on mount
   useEffect(() => {
-    document.body.className = theme === 'light' ? 'light-theme' : '';
-  }, []);
+    const themeClass = theme === 'light' ? 'light-theme' : 
+                      theme === 'dark' ? '' :
+                      `${theme}-theme`;
+    document.body.className = themeClass;
+  }, [theme]);
 
   useEffect(() => {
     // Check for existing session
@@ -38,14 +57,11 @@ function App() {
 
     // Generate full curriculum
     setCurriculum(generateFullCurriculum());
-    
-    // Apply theme
-    document.body.className = theme === 'light' ? 'light-theme' : '';
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [theme]);
+  }, []);
 
   const checkUser = async () => {
     try {
@@ -80,6 +96,7 @@ function App() {
       
       if (profile) {
         const userProgress = await getProgress(authUser.id);
+        const userGamification = await getGamificationData(authUser.id);
         
         setUser({
           id: authUser.id,
@@ -90,6 +107,12 @@ function App() {
         });
         
         setProgress(userProgress);
+        setGamificationData(userGamification);
+        
+        // Apply saved theme
+        if (userGamification.selectedTheme) {
+          setTheme(userGamification.selectedTheme);
+        }
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -122,6 +145,7 @@ function App() {
       await signOut();
       setUser(null);
       setProgress({});
+      setGamificationData(initializeGamification());
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -129,6 +153,47 @@ function App() {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+  
+  const handlePurchase = async (item) => {
+    const newGamificationData = { ...gamificationData };
+    newGamificationData.coins -= item.cost;
+    newGamificationData.purchases.push(item.id);
+    
+    setGamificationData(newGamificationData);
+    
+    if (user) {
+      try {
+        await updateGamification(user.id, newGamificationData);
+      } catch (error) {
+        console.error('Error saving purchase:', error);
+      }
+    }
+  };
+  
+  const handleThemeChange = async (themeId) => {
+    let newTheme = 'dark';
+    if (themeId === 'theme_light') newTheme = 'light';
+    else if (themeId === 'theme_matrix') newTheme = 'matrix';
+    else if (themeId === 'theme_sunset') newTheme = 'sunset';
+    else if (themeId === 'theme_ocean') newTheme = 'ocean';
+    else if (themeId === 'theme_forest') newTheme = 'forest';
+    else if (themeId === 'theme_space') newTheme = 'space';
+    else if (themeId === 'theme_retro') newTheme = 'retro';
+    
+    setTheme(newTheme);
+    
+    const newGamificationData = { ...gamificationData };
+    newGamificationData.selectedTheme = newTheme;
+    setGamificationData(newGamificationData);
+    
+    if (user) {
+      try {
+        await updateGamification(user.id, newGamificationData);
+      } catch (error) {
+        console.error('Error saving theme:', error);
+      }
+    }
   };
 
   const updateProgress = async (day, data) => {
@@ -138,10 +203,71 @@ function App() {
     };
     setProgress(newProgress);
     
+    // Calculate XP and coin rewards
+    let xpEarned = 0;
+    let coinsEarned = 0;
+    const newAchievements = [];
+    
+    // Award XP for different activities
+    if (data.lessonRead && !progress[day]?.lessonRead) {
+      xpEarned += XP_REWARDS.readLesson;
+      coinsEarned += 5;
+    }
+    
+    if (data.completed && !progress[day]?.completed) {
+      xpEarned += XP_REWARDS.completeDay;
+      coinsEarned += 20;
+      
+      // Check for perfect day
+      if (data.score >= 80) {
+        xpEarned += XP_REWARDS.perfectDay - XP_REWARDS.completeDay;
+        coinsEarned += 30;
+      }
+    }
+    
+    // Update gamification stats
+    const newGamificationData = { ...gamificationData };
+    newGamificationData.xp += xpEarned;
+    newGamificationData.coins += coinsEarned;
+    
+    // Update stats
+    if (data.completed && !progress[day]?.completed) {
+      newGamificationData.stats.daysCompleted++;
+      newGamificationData.stats.currentDay = Math.max(newGamificationData.stats.currentDay, parseInt(day));
+    }
+    
+    if (data.lessonRead && !progress[day]?.lessonRead) {
+      newGamificationData.stats.lessonsRead++;
+    }
+    
+    // Check for level up
+    const oldLevel = getLevelFromXP(gamificationData.xp);
+    const newLevel = getLevelFromXP(newGamificationData.xp);
+    if (newLevel.level > oldLevel.level) {
+      newGamificationData.level = newLevel.level;
+      coinsEarned += 50; // Level up bonus
+      newGamificationData.coins += 50;
+    }
+    
+    // Check for new achievements
+    const earnedAchievements = checkAchievements(newGamificationData.stats, gamificationData.achievements);
+    if (earnedAchievements.length > 0) {
+      earnedAchievements.forEach(achievement => {
+        newGamificationData.achievements.push(achievement.id);
+        newGamificationData.xp += achievement.xpReward;
+        newGamificationData.coins += achievement.coinsReward;
+        newAchievements.push(achievement);
+      });
+    }
+    
+    newGamificationData.newAchievements = newAchievements;
+    setGamificationData(newGamificationData);
+    
     // Save to Supabase if user is logged in
     if (user) {
       try {
         await updateSupabaseProgress(user.id, day, data);
+        await updateGamification(user.id, newGamificationData);
         
         // Update user's current day if completing a daily training
         if (data.completed && !day.startsWith('mock')) {
@@ -180,6 +306,11 @@ function App() {
           {theme === 'dark' ? 'LIGHT' : 'DARK'}
         </button>
         <Navigation user={user} onLogout={handleLogout} />
+        <Gamification 
+          gamificationData={gamificationData}
+          onPurchase={handlePurchase}
+          onThemeChange={handleThemeChange}
+        />
         <main className="main-content">
           <Routes>
             <Route path="/" element={
@@ -188,6 +319,7 @@ function App() {
                 progress={progress} 
                 curriculum={curriculum} 
                 updateProgress={updateProgress}
+                gamificationData={gamificationData}
               />
             } />
             <Route path="/training/:day" element={

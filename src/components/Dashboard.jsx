@@ -5,7 +5,7 @@ import DailyTasks from './DailyTasks';
 import { isDayUnlocked } from '../data/curriculum';
 import './Dashboard.css';
 
-function Dashboard({ user, progress, curriculum, updateProgress }) {
+function Dashboard({ user, progress, curriculum, updateProgress, gamificationData }) {
   const [tasks, setTasks] = useState([]);
   const navigate = useNavigate();
   

@@ -33,6 +33,13 @@ export const curriculum = {
   // Daily tasks that must be completed every day
   dailyTasks: [
     {
+      id: "read-lesson",
+      name: "Read Today's Lesson",
+      description: "Study the technique lesson for today",
+      type: "lesson",
+      count: 1
+    },
+    {
       id: "warmup",
       name: "Mental Math Warmup",
       description: "20 basic calculations to activate your mind",

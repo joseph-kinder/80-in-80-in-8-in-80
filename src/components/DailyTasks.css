@@ -177,3 +177,8 @@ body.light-theme .time-limit {
 .cancel-btn:hover {
   opacity: 1;
 }
+.task-hint {
+  color: var(--secondary);
+  font-size: 0.8rem;
+  font-style: italic;
+}

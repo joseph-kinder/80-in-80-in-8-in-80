@@ -17,11 +17,20 @@ function DailyTraining({ curriculum, progress, updateProgress }) {
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [lessonRead, setLessonRead] = useState(false);
+  const [showExercise, setShowExercise] = useState(false);
 
   const dayNum = parseInt(day);
   const todaysData = curriculum?.days.find(d => d.day === dayNum);
   const exercise = todaysData?.exercises[currentExercise];
   const lesson = getLessonForDay(dayNum);
+
+  // Check if lesson was already read
+  useEffect(() => {
+    if (progress[dayNum]?.lessonRead) {
+      setLessonRead(true);
+      setShowExercise(true);
+    }
+  }, [progress, dayNum]);
 
   useEffect(() => {
     if (!todaysData) return;
@@ -131,7 +140,8 @@ function DailyTraining({ curriculum, progress, updateProgress }) {
         exercises: todaysData.exercises.map((ex, i) => ({
           name: ex.name,
           completed: i <= currentExercise
-        }))
+        })),
+        lessonRead: lessonRead
       };
       updateProgress(dayNum, dayResults);
       navigate('/');
@@ -219,12 +229,18 @@ function DailyTraining({ curriculum, progress, updateProgress }) {
       {lesson && !lessonRead && currentExercise === 0 && (
         <LessonDisplay 
           lesson={lesson} 
-          onComplete={() => setLessonRead(true)} 
+          onComplete={() => {
+            setLessonRead(true);
+            setShowExercise(true);
+            // Save lesson read status
+            const currentProgress = progress[dayNum] || {};
+            updateProgress(dayNum, { ...currentProgress, lessonRead: true });
+          }} 
         />
       )}
       
       {/* Only show exercise UI after lesson is read (or if no lesson) */}
-      {(!lesson || lessonRead) && (
+      {(!lesson || lessonRead || showExercise) && (
         <>
           {!isTimerRunning && problems.length > 0 && (
             <div className="exercise-card card">

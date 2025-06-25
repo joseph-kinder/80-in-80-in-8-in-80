@@ -1,0 +1,285 @@
+.mock-test {
+  max-width: 60ch;
+  margin: 0 auto;
+}
+
+/* Test intro */
+.test-intro {
+  border: 2px solid currentColor;
+  padding: 2rem;
+  text-align: center;
+  margin: 2rem auto;
+}
+
+.test-intro h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.test-intro p {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+/* Test rules */
+.test-rules {
+  text-align: left;
+  border: 1px solid currentColor;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme .test-rules {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.test-rules h3 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.test-rules h3::before,
+.test-rules h3::after {
+  content: none;
+}
+
+.test-rules ul {
+  list-style: none;
+  padding: 0;
+}
+
+.test-rules li {
+  padding: 0.25rem 0;
+  padding-left: 2ch;
+  position: relative;
+}
+
+.test-rules li::before {
+  content: ">";
+  position: absolute;
+  left: 0;
+  opacity: 0.5;
+}
+
+/* Test header */
+.test-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid currentColor;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.test-progress {
+  font-weight: normal;
+  opacity: 0.8;
+}
+
+.test-timer {
+  font-family: monospace;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.test-timer svg {
+  display: none;
+}
+
+.test-timer::before {
+  content: "[";
+}
+
+.test-timer::after {
+  content: "]";
+}
+
+.test-timer.overtime {
+  color: var(--dark-error);
+  animation: blink 0.5s infinite;
+}
+
+body.light-theme .test-timer.overtime {
+  color: var(--light-error);
+}
+
+/* Test problem */
+.test-problem {
+  border: 2px solid currentColor;
+  padding: 3rem 2rem;
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.problem-display {
+  font-size: 3rem;
+  font-weight: normal;
+  margin-bottom: 3rem;
+  font-family: monospace;
+}
+
+.problem-display::before,
+.problem-display::after {
+  content: none;
+}
+
+.answer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  max-width: 20ch;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.answer-form input {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.5rem;
+  text-align: center;
+  font-family: monospace;
+}
+
+.answer-form button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.overtime-message {
+  margin-top: 2rem;
+  color: var(--dark-error);
+  font-weight: bold;
+  text-transform: uppercase;
+  animation: blink 1s infinite;
+}
+
+body.light-theme .overtime-message {
+  color: var(--light-error);
+}
+
+/* Test progress bar */
+.test-progress-bar {
+  margin-top: 2rem;
+  height: 1rem;
+  border: 1px solid currentColor;
+  position: relative;
+}
+
+.test-progress-bar::before {
+  content: "TEST PROGRESS";
+  position: absolute;
+  top: -1.5rem;
+  left: 0;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Results */
+.test-results {
+  border: 2px solid currentColor;
+  padding: 2rem;
+  text-align: center;
+}
+
+.test-results h1 {
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.result-box {
+  border: 1px solid currentColor;
+  padding: 1rem;
+}
+
+.result-box h3 {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  font-weight: normal;
+}
+
+.result-box h3::before,
+.result-box h3::after {
+  content: none;
+}
+
+.big-number {
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: monospace;
+}
+
+/* Performance analysis */
+.performance-analysis {
+  border: 1px solid currentColor;
+  padding: 1.5rem;
+  text-align: left;
+  margin-bottom: 2rem;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .performance-analysis {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.performance-analysis h3 {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.performance-analysis h3::before,
+.performance-analysis h3::after {
+  content: none;
+}
+
+.performance-analysis p {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.performance-analysis .success {
+  color: var(--dark-success);
+}
+
+.performance-analysis .warning {
+  color: var(--dark-error);
+}
+
+body.light-theme .performance-analysis .success {
+  color: var(--light-success);
+}
+
+body.light-theme .performance-analysis .warning {
+  color: var(--light-error);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .problem-display {
+    font-size: 2rem;
+  }
+}

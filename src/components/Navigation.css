@@ -1,0 +1,140 @@
+.navigation {
+  border-bottom: 1px solid currentColor;
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+}
+
+.nav-container {
+  max-width: 80ch;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-brand h2 {
+  font-size: 1rem;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.nav-brand h2::before,
+.nav-brand h2::after {
+  content: none;
+}
+
+.user-info {
+  opacity: 0.8;
+  font-size: 0.875rem;
+}
+
+.user-info::before {
+  content: "USER: ";
+  opacity: 0.6;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  transition: all 0.1s;
+}
+
+.nav-link svg {
+  display: none;
+}
+
+.nav-link::before {
+  content: "[";
+  opacity: 0.5;
+}
+
+.nav-link::after {
+  content: "]";
+  opacity: 0.5;
+}
+
+.nav-link:hover {
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+}
+
+.nav-link.active {
+  border-color: currentColor;
+  background: transparent;
+  color: currentColor;
+  font-weight: bold;
+}
+
+.nav-link.active::before {
+  content: ">";
+  margin-right: 0.25rem;
+}
+
+.nav-link.active::after {
+  content: "<";
+  margin-left: 0.25rem;
+}
+
+.logout-btn {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid currentColor;
+}
+
+.logout-btn svg {
+  display: none;
+}
+
+.logout-btn::before {
+  content: ">> ";
+}
+
+.logout-btn:hover {
+  background: currentColor;
+  color: var(--dark-bg);
+}
+
+body.light-theme .logout-btn:hover {
+  color: var(--light-bg);
+}
+
+/* Terminal prompt style navigation */
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .nav-links {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .nav-link {
+    width: 100%;
+  }
+}

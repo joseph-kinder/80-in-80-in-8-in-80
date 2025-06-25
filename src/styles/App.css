@@ -1,0 +1,218 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+  max-width: 80ch;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Terminal-style cards */
+.card {
+  border: 1px solid currentColor;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.card::before {
+  content: "┌─";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+}
+
+.card::after {
+  content: "─┐";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+}
+
+.card > *:first-child::before {
+  content: "│ ";
+}
+
+/* Terminal headers */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: normal;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+h1::before { content: "[[ "; }
+h1::after { content: " ]]"; }
+
+h2::before { content: "[ "; }
+h2::after { content: " ]"; }
+
+h3::before { content: "< "; }
+h3::after { content: " >"; }
+
+/* Lists */
+ul, ol {
+  list-style: none;
+  padding-left: 2ch;
+}
+
+li::before {
+  content: "* ";
+  position: absolute;
+  margin-left: -2ch;
+}
+
+ol li::before {
+  content: counter(list-item) ". ";
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid currentColor;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+/* Progress bars */
+.progress-bar {
+  height: 1rem;
+  border: 1px solid currentColor;
+  position: relative;
+  background: transparent;
+}
+
+.progress-fill {
+  height: 100%;
+  background: currentColor;
+  transition: width 0.3s;
+}
+
+/* Theme toggle */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  padding: 0.25rem 0.5rem;
+  font-size: 12px;
+  background: transparent;
+  border: 1px solid var(--dark-text);
+  color: var(--dark-text);
+}
+
+body.light-theme .theme-toggle {
+  border-color: var(--light-text);
+  color: var(--light-text);
+}
+
+.theme-toggle:hover {
+  background: var(--dark-text);
+  color: var(--dark-bg);
+}
+
+body.light-theme .theme-toggle:hover {
+  background: var(--light-text);
+  color: var(--light-bg);
+}
+
+/* Loading animation */
+.loading {
+  display: inline-block;
+}
+
+.loading::after {
+  content: "...";
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { content: "."; }
+  33% { content: ".."; }
+  66% { content: "..."; }
+}
+
+/* Terminal window style */
+.terminal-window {
+  border: 1px solid currentColor;
+  margin-bottom: 1rem;
+}
+
+.terminal-header {
+  border-bottom: 1px solid currentColor;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.terminal-title {
+  text-transform: uppercase;
+}
+
+.terminal-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.terminal-control {
+  width: 1ch;
+  height: 1ch;
+  border: 1px solid currentColor;
+  display: inline-block;
+}
+
+.terminal-body {
+  padding: 1rem;
+}
+
+/* ASCII art container */
+.ascii-art {
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* Status indicators */
+.status-ok { color: var(--dark-success); }
+.status-error { color: var(--dark-error); }
+.status-pending { color: var(--dark-text-dim); }
+
+body.light-theme .status-ok { color: var(--light-success); }
+body.light-theme .status-error { color: var(--light-error); }
+body.light-theme .status-pending { color: var(--light-text-dim); }
+
+/* Checkboxes as ASCII */
+input[type="checkbox"] {
+  appearance: none;
+  width: 3ch;
+  height: 1em;
+  border: 1px solid currentColor;
+  display: inline-block;
+  position: relative;
+  margin-right: 0.5ch;
+  vertical-align: middle;
+}
+
+input[type="checkbox"]:checked::before {
+  content: "[X]";
+  position: absolute;
+  left: -1px;
+  top: -1px;
+}
+
+input[type="checkbox"]:not(:checked)::before {
+  content: "[ ]";
+  position: absolute;
+  left: -1px;
+  top: -1px;
+}

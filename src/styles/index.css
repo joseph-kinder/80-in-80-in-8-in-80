@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Terminal Dark Theme (Green Phosphor) */
+  --dark-bg: #001100;
+  --dark-surface: #002200;
+  --dark-text: #00ff00;
+  --dark-text-dim: #00aa00;
+  --dark-accent: #00ff00;
+  --dark-border: #00ff00;
+  --dark-error: #ff0000;
+  --dark-success: #00ff00;
+  
+  /* Terminal Light Theme (Blue on Beige) */
+  --light-bg: #f5f2e8;
+  --light-surface: #fffef5;
+  --light-text: #0066cc;
+  --light-text-dim: #0044aa;
+  --light-accent: #0066cc;
+  --light-border: #0066cc;
+  --light-error: #cc0000;
+  --light-success: #009900;
+  
+  /* Font */
+  --terminal-font: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* Default to dark theme */
+body {
+  font-family: var(--terminal-font);
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+  line-height: 1.6;
+  font-size: 14px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light theme */
+body.light-theme {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+/* Terminal glow effect for dark theme */
+body:not(.light-theme) * {
+  text-shadow: 0 0 2px currentColor;
+}
+
+body:not(.light-theme) {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 255, 0, 0.03) 2px,
+      rgba(0, 255, 0, 0.03) 4px
+    );
+}
+
+/* Scanline effect for authenticity */
+body:not(.light-theme)::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(0, 255, 0, 0.03) 1px,
+    rgba(0, 255, 0, 0.03) 2px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* All content should be above scanlines */
+#root {
+  position: relative;
+  z-index: 2;
+}
+
+/* Terminal cursor animation */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.cursor::after {
+  content: "_";
+  animation: blink 1s infinite;
+}
+
+/* Selection colors */
+::selection {
+  background: var(--dark-text);
+  color: var(--dark-bg);
+}
+
+body.light-theme ::selection {
+  background: var(--light-text);
+  color: var(--light-bg);
+}
+
+/* Scrollbar styling - Dark theme (default) */
+body::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+body::-webkit-scrollbar-track {
+  background: #001100;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: #00ff00;
+  border: 2px solid #001100;
+}
+
+body::-webkit-scrollbar-corner {
+  background: #001100;
+}
+
+/* Scrollbar styling - Light theme */
+body.light-theme::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+body.light-theme::-webkit-scrollbar-track {
+  background: #f5f2e8;
+}
+
+body.light-theme::-webkit-scrollbar-thumb {
+  background: #0066cc;
+  border: 2px solid #f5f2e8;
+}
+
+body.light-theme::-webkit-scrollbar-corner {
+  background: #f5f2e8;
+}
+
+/* Also apply to all elements in light theme */
+body.light-theme *::-webkit-scrollbar-track {
+  background: #f5f2e8;
+}
+
+body.light-theme *::-webkit-scrollbar-thumb {
+  background: #0066cc;
+  border: 2px solid #f5f2e8;
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration: none;
+  background: currentColor;
+  color: var(--dark-bg);
+}
+
+body.light-theme a:hover {
+  color: var(--light-bg);
+}
+
+/* Buttons */
+button {
+  font-family: var(--terminal-font);
+  cursor: pointer;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  padding: 0.5rem 1rem;
+  font-size: inherit;
+  text-transform: uppercase;
+  transition: all 0.1s;
+}
+
+button:hover {
+  background: currentColor;
+  color: var(--dark-bg);
+  box-shadow: 0 0 10px currentColor;
+}
+
+body.light-theme button:hover {
+  color: var(--light-bg);
+  box-shadow: none;
+}
+
+button:active {
+  transform: translate(1px, 1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  font-family: var(--terminal-font);
+  background: transparent;
+  border: 1px solid currentColor;
+  color: inherit;
+  padding: 0.5rem;
+  font-size: inherit;
+  width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 5px currentColor;
+}
+
+/* Terminal prompt style */
+.prompt::before {
+  content: "> ";
+  color: var(--dark-text-dim);
+}
+
+body.light-theme .prompt::before {
+  color: var(--light-text-dim);
+}

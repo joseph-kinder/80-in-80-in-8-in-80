@@ -30,15 +30,13 @@ export const SHOP_ITEMS = {
     },
     {
       id: 'theme_sunset',
-      name: 'Sunset Theme',
-      description: 'Warm orange and pink gradients',
+      name: 'Sunset Theme',      description: 'Warm orange and pink gradients',
       icon: '🌅',
       cost: 150,
       type: 'theme',
       cssClass: 'sunset-theme'
-    }
-  ]
-};    {
+    },
+    {
       id: 'theme_ocean',
       name: 'Ocean Theme',
       description: 'Deep blue and aqua colors',
@@ -61,8 +59,7 @@ export const SHOP_ITEMS = {
       name: 'Space Theme',
       description: 'Dark with stars and cosmic colors',
       icon: '🚀',
-      cost: 300,
-      type: 'theme',
+      cost: 300,      type: 'theme',
       cssClass: 'space-theme'
     },
     {
@@ -91,8 +88,7 @@ export const SHOP_ITEMS = {
       name: 'Skip Token',
       description: 'Skip a difficult problem',
       icon: '⏭️',
-      cost: 75,
-      type: 'consumable',
+      cost: 75,      type: 'consumable',
       quantity: 1
     },
     {
@@ -121,8 +117,7 @@ export const SHOP_ITEMS = {
       name: 'Gold Star Badge',
       description: 'Show off your excellence',
       icon: '⭐',
-      cost: 200,
-      type: 'badge'
+      cost: 200,      type: 'badge'
     },
     {
       id: 'badge_lightning',
@@ -151,8 +146,7 @@ export function getUserShopData(coins, purchases = []) {
     powerups: {},
     badges: []
   };
-  
-  // Process themes
+    // Process themes
   SHOP_ITEMS.themes.forEach(theme => {
     shopData.themes.push({
       ...theme,

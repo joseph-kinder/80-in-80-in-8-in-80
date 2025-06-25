@@ -4,8 +4,8 @@ export const LEVELS = [
   { level: 2, title: 'Number Cruncher', xpRequired: 100, icon: '🔢' },
   { level: 3, title: 'Quick Calculator', xpRequired: 250, icon: '🧮' },
   { level: 4, title: 'Mental Math Student', xpRequired: 450, icon: '📚' },
-  { level: 5, title: 'Arithmetic Apprentice', xpRequired: 700, icon: '🎓' }
-];  { level: 6, title: 'Speed Solver', xpRequired: 1000, icon: '⚡' },
+  { level: 5, title: 'Arithmetic Apprentice', xpRequired: 700, icon: '🎓' },
+  { level: 6, title: 'Speed Solver', xpRequired: 1000, icon: '⚡' },
   { level: 7, title: 'Math Warrior', xpRequired: 1400, icon: '⚔️' },
   { level: 8, title: 'Number Ninja', xpRequired: 1850, icon: '🥷' },
   { level: 9, title: 'Calculation Champion', xpRequired: 2350, icon: '🏆' },

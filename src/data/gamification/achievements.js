@@ -36,8 +36,8 @@ export const ACHIEVEMENTS = [
     xpReward: 500,
     coinsReward: 200,
     condition: (stats) => stats.currentDay >= 40
-  }
-];  {
+  },
+  {
     id: 'program_complete',
     name: 'Master of 80',
     description: 'Complete all 80 days',

@@ -54,7 +54,7 @@ function DailyTasks({ curriculum, progress, currentDay, onTaskComplete, onAllTas
     
     // Generate mixed problems using appropriate techniques
     for (let i = 0; i < task.count; i++) {
-      const technique = techniques[this.random(0, techniques.length - 1)];
+      const technique = techniques[random(0, techniques.length - 1)];
       const operation = currentDay <= 10 ? (i % 2 === 0 ? '+' : '-') : '×';
       
       if (operation === '+') {
@@ -72,7 +72,7 @@ function DailyTasks({ curriculum, progress, currentDay, onTaskComplete, onAllTas
   };
   
   // Helper function for random numbers
-  random(min, max) {
+  const random = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 

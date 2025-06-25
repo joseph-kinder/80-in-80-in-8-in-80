@@ -116,12 +116,6 @@ export class ProblemGenerator {
       technique,
       difficulty 
     };
-  }    return { 
-      question: `${a} - ${b}`, 
-      answer: a - b,
-      operation: '-',
-      difficulty 
-    };
   }
   
   // Generate multiplication problems based on technique

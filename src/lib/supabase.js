@@ -141,37 +141,107 @@ export const updateCurrentDay = async (userId, currentDay) => {
 
 // Gamification functions
 export const updateGamification = async (userId, updates) => {
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      xp: updates.xp,
-      coins: updates.coins,
-      level: updates.level,
-      achievements: updates.achievements,
-      purchases: updates.purchases,
-      gamification_stats: updates.stats,
-      selected_theme: updates.selectedTheme
-    })
-    .eq('id', userId)
-  
-  if (error) throw error
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        xp: updates.xp,
+        coins: updates.coins,
+        level: updates.level,
+        achievements: updates.achievements,
+        purchases: updates.purchases,
+        gamification_stats: updates.stats,
+        selected_theme: updates.selectedTheme
+      })
+      .eq('id', userId)
+    
+    if (error) {
+      console.warn('Error updating gamification data:', error);
+      // Don't throw, just log the error
+    }
+  } catch (error) {
+    console.error('Error in updateGamification:', error);
+  }
 }
 
 export const getGamificationData = async (userId) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('xp, coins, level, achievements, purchases, gamification_stats, selected_theme')
-    .eq('id', userId)
-    .single()
-  
-  if (error) throw error
-  return {
-    xp: data.xp || 0,
-    coins: data.coins || 100,
-    level: data.level || 1,
-    achievements: data.achievements || [],
-    purchases: data.purchases || [],
-    stats: data.gamification_stats || {},
-    selectedTheme: data.selected_theme || 'dark'
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('xp, coins, level, achievements, purchases, gamification_stats, selected_theme')
+      .eq('id', userId)
+      .single()
+    
+    if (error) {
+      console.warn('Error fetching gamification data:', error);
+      // Return default values if columns don't exist
+      return {
+        xp: 0,
+        coins: 100,
+        level: 1,
+        achievements: [],
+        purchases: [],
+        stats: {
+          daysCompleted: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          perfectScores: 0,
+          speedDemonCount: 0,
+          highAccuracyDays: 0,
+          taskCompletionDays: 0,
+          lessonsRead: 0,
+          highestMockScore: 0,
+          totalProblems: 0,
+          correctProblems: 0
+        },
+        selectedTheme: 'dark'
+      };
+    }
+    
+    return {
+      xp: data.xp || 0,
+      coins: data.coins || 100,
+      level: data.level || 1,
+      achievements: data.achievements || [],
+      purchases: data.purchases || [],
+      stats: data.gamification_stats || {
+        daysCompleted: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        perfectScores: 0,
+        speedDemonCount: 0,
+        highAccuracyDays: 0,
+        taskCompletionDays: 0,
+        lessonsRead: 0,
+        highestMockScore: 0,
+        totalProblems: 0,
+        correctProblems: 0
+      },
+      selectedTheme: data.selected_theme || 'dark'
+    };
+  } catch (error) {
+    console.error('Error in getGamificationData:', error);
+    // Return defaults on any error
+    return {
+      xp: 0,
+      coins: 100,
+      level: 1,
+      achievements: [],
+      purchases: [],
+      stats: {
+        daysCompleted: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        perfectScores: 0,
+        speedDemonCount: 0,
+        highAccuracyDays: 0,
+        taskCompletionDays: 0,
+        lessonsRead: 0,
+        highestMockScore: 0,
+        totalProblems: 0,
+        correctProblems: 0
+      },
+      selectedTheme: 'dark'
+    };
   }
 }

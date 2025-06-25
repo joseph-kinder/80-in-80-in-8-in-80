@@ -96,7 +96,15 @@ function App() {
       
       if (profile) {
         const userProgress = await getProgress(authUser.id);
-        const userGamification = await getGamificationData(authUser.id);
+        
+        // Try to load gamification data, but don't fail if columns don't exist
+        let userGamification;
+        try {
+          userGamification = await getGamificationData(authUser.id);
+        } catch (gamError) {
+          console.warn('Gamification data not available, using defaults:', gamError);
+          userGamification = initializeGamification();
+        }
         
         setUser({
           id: authUser.id,
@@ -125,6 +133,7 @@ function App() {
         baselineScore: 40,
         currentDay: 1
       });
+      setGamificationData(initializeGamification());
     }
   };
 

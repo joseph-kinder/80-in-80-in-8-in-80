@@ -148,14 +148,9 @@ function App() {
   };
 
   const handleLogin = async (userData) => {
-    setUser(userData);
-    // Load progress after login
-    try {
-      const userProgress = await getProgress(userData.id);
-      setProgress(userProgress);
-    } catch (error) {
-      console.error('Error loading progress:', error);
-    }
+    // Don't update state if we're already loading
+    // The auth state change will handle everything
+    return;
   };
 
   const handleLogout = async () => {

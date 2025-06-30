@@ -37,7 +37,8 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
     }
   }, [notification]);
   
-  const handlePurchase = (item) => {    if (item.cost <= gamificationData.coins) {
+  const handlePurchase = (item) => {
+    if (item.cost <= gamificationData.coins) {
       onPurchase(item);
       setNotification({
         type: 'purchase',
@@ -64,12 +65,12 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
         </div>
         
         <div className="currency-info">
-          <span className="coins">🪙 {gamificationData.coins}</span>
+          <span className="coins">COINS: {gamificationData.coins}</span>
           <button onClick={() => setShowShop(!showShop)} className="shop-btn">
-            🛍️ Shop
+            SHOP
           </button>
           <button onClick={() => setShowAchievements(!showAchievements)} className="achievements-btn">
-            🏆 ({gamificationData.achievements.length})
+            ACHIEVEMENTS ({gamificationData.achievements.length})
           </button>
         </div>
       </div>
@@ -89,11 +90,11 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
       {showShop && (
         <div className="modal-overlay" onClick={() => setShowShop(false)}>
           <div className="shop-modal" onClick={e => e.stopPropagation()}>
-            <h2>🛍️ Shop</h2>
-            <p className="coins-display">Your Coins: 🪙 {gamificationData.coins}</p>
+            <h2>SHOP</h2>
+            <p className="coins-display">Your Coins: {gamificationData.coins}</p>
             
             <div className="shop-section">
-              <h3>🎨 Themes</h3>
+              <h3>THEMES</h3>
               <div className="shop-items">
                 {shopData.themes.map(theme => (
                   <div key={theme.id} className={`shop-item ${theme.owned ? 'owned' : ''}`}>
@@ -112,7 +113,7 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
                         disabled={theme.cost > gamificationData.coins}
                         className="buy-btn"
                       >
-                        🪙 {theme.cost}
+                        {theme.cost} COINS
                       </button>
                     )}
                   </div>
@@ -121,7 +122,7 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
             </div>
             
             <div className="shop-section">
-              <h3>💪 Power-ups</h3>
+              <h3>POWER-UPS</h3>
               <div className="shop-items">
                 {shopData.badges.map(badge => (
                   <div key={badge.id} className={`shop-item ${badge.owned ? 'owned' : ''}`}>
@@ -138,7 +139,7 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
                         disabled={badge.cost > gamificationData.coins}
                         className="buy-btn"
                       >
-                        🪙 {badge.cost}
+                        {badge.cost} COINS
                       </button>
                     )}
                   </div>
@@ -155,7 +156,7 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
       {showAchievements && (
         <div className="modal-overlay" onClick={() => setShowAchievements(false)}>
           <div className="achievements-modal" onClick={e => e.stopPropagation()}>
-            <h2>🏆 Achievements</h2>
+            <h2>ACHIEVEMENTS</h2>
             <p>Unlocked: {gamificationData.achievements.length} / {ACHIEVEMENTS.length}</p>
             
             <div className="achievements-list">
@@ -163,12 +164,12 @@ function Gamification({ gamificationData, onPurchase, onThemeChange }) {
                 const isUnlocked = gamificationData.achievements.includes(achievement.id);
                 return (
                   <div key={achievement.id} className={`achievement-item ${isUnlocked ? 'unlocked' : 'locked'}`}>
-                    <span className="achievement-icon">{isUnlocked ? achievement.icon : '🔒'}</span>
+                    <span className="achievement-icon">{isUnlocked ? achievement.icon : '[LOCKED]'}</span>
                     <div className="achievement-info">
                       <h4>{achievement.name}</h4>
                       <p>{achievement.description}</p>
                       {isUnlocked && (
-                        <span className="rewards">+{achievement.xpReward} XP, +{achievement.coinsReward} 🪙</span>
+                        <span className="rewards">+{achievement.xpReward} XP, +{achievement.coinsReward} COINS</span>
                       )}
                     </div>
                   </div>

@@ -134,7 +134,7 @@ function Progress({ progress, curriculum }) {
             <p className="achievement">🎉 Great job! You're approaching mastery level!</p>
           )}
           {highestScore >= 80 && (
-            <p className="achievement">🏆 Congratulations! You've achieved the target score!</p>
+            <p className="achievement">[ACHIEVEMENT] Congratulations! You've achieved the target score!</p>
           )}
         </div>
       )}

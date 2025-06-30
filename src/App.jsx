@@ -32,6 +32,7 @@ function App() {
   const [gamificationData, setGamificationData] = useState(initializeGamification());
   const [theme, setTheme] = useState('dark');
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Apply theme immediately on mount
   useEffect(() => {
@@ -42,59 +43,74 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    console.log('[AUTH] Initial useEffect - setting loading to true');
-    setLoading(true);
-    supabase.auth.getSession()
-      .then(async ({ data: { session } }) => {
-        console.log('[AUTH] getSession result:', session);
-        try {
-          if (session?.user) {
-            console.log('[AUTH] Session found, loading user data');
-            await loadUserData(session.user);
-          } else {
-            console.log('[AUTH] No session found');
-          }
-        } catch (error) {
-          console.error('[AUTH] Error loading user data on initial load:', error);
-        } finally {
-          console.log('[AUTH] Initial load complete - setting loading to false');
-          setLoading(false);
+    console.log('[AUTH] Starting authentication check');
+    let mounted = true;
+    
+    const initAuth = async () => {
+      try {
+        console.log('[AUTH] Getting session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) {
+          console.log('[AUTH] Component unmounted, aborting');
+          return;
         }
-      })
-      .catch((error) => {
-        console.error('[AUTH] Error getting session:', error);
-        setLoading(false);
-      });
-
+        
+        console.log('[AUTH] Session result:', session, 'error:', error);
+        
+        if (error) {
+          console.error('[AUTH] Session error:', error);
+        } else if (session?.user) {
+          console.log('[AUTH] Session found, loading user data');
+          await loadUserData(session.user);
+        } else {
+          console.log('[AUTH] No session found');
+        }
+      } catch (error) {
+        console.error('[AUTH] Unexpected error:', error);
+      } finally {
+        if (mounted) {
+          console.log('[AUTH] Auth check complete, setting loading to false');
+          setLoading(false);
+          setAuthChecked(true);
+        }
+      }
+    };
+    
+    // Run auth check
+    initAuth();
+    
+    // Set up auth listener
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AUTH] Auth state changed:', event, session?.user?.id);
+      
+      if (!authChecked) {
+        console.log('[AUTH] Ignoring auth change - initial check not complete');
+        return;
+      }
+      
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('[AUTH] SIGNED_IN event - setting loading to true');
-        setLoading(true);
+        console.log('[AUTH] SIGNED_IN event - loading user data');
         try {
           await loadUserData(session.user);
         } catch (error) {
           console.error('[AUTH] Error loading user data on auth change:', error);
-        } finally {
-          console.log('[AUTH] SIGNED_IN complete - setting loading to false');
-          setLoading(false);
         }
-      }
-      if (event === 'SIGNED_OUT') {
+      } else if (event === 'SIGNED_OUT') {
         console.log('[AUTH] SIGNED_OUT event');
         setUser(null);
         setProgress({});
         setGamificationData(initializeGamification());
-        setLoading(false);
       }
     });
 
     setCurriculum(generateFullCurriculum());
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [authChecked]);
 
   const loadUserData = async (authUser) => {
     console.log('[LOAD USER DATA] Starting to load user data for:', authUser.id);
@@ -338,7 +354,6 @@ function App() {
   }
 
   console.log('[RENDER] Showing main app - loading:', loading, 'user:', user);
-
   return (
     <Router>
       <div className="app">

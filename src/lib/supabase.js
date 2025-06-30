@@ -5,6 +5,9 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY'
 
+console.log('[SUPABASE] Initializing with URL:', supabaseUrl);
+console.log('[SUPABASE] URL is placeholder?', supabaseUrl === 'YOUR_SUPABASE_URL');
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Auth helpers

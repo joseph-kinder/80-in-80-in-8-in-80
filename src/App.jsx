@@ -42,39 +42,49 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
-    // Check for existing session
-    checkUser();
-    
-    // Listen for auth changes
+    setLoading(true);
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        try {
+          if (session?.user) {
+            await loadUserData(session.user);
+          }
+        } catch (error) {
+          console.error('Error loading user data on initial load:', error);
+        } finally {
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error getting session:', error);
+        setLoading(false);
+      });
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        await loadUserData(session.user);
-      } else if (event === 'SIGNED_OUT') {
+        setLoading(true);
+        try {
+          await loadUserData(session.user);
+        } catch (error) {
+          console.error('Error loading user data on auth change:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+      if (event === 'SIGNED_OUT') {
         setUser(null);
         setProgress({});
+        setGamificationData(initializeGamification());
+        setLoading(false);
       }
     });
 
-    // Generate full curriculum
     setCurriculum(generateFullCurriculum());
 
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
-
-  const checkUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await loadUserData(user);
-      }
-    } catch (error) {
-      console.error('Error checking user:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadUserData = async (authUser) => {
     try {

@@ -10,6 +10,11 @@ console.log('[SUPABASE] URL is placeholder?', supabaseUrl === 'YOUR_SUPABASE_URL
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Test the connection
+supabase.auth.getSession()
+  .then(result => console.log('[SUPABASE] Initial connection test successful'))
+  .catch(error => console.error('[SUPABASE] Initial connection test failed:', error));
+
 // Auth helpers
 export const signUp = async (email, password, username, baselineScore) => {
   // First, sign up the user

@@ -49,13 +49,23 @@ function App() {
     const initAuth = async () => {
       try {
         console.log('[AUTH] Getting session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Session check timed out after 5 seconds')), 5000);
+        });
+        
+        // Race between getSession and timeout
+        const sessionPromise = supabase.auth.getSession();
+        
+        const result = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (!mounted) {
           console.log('[AUTH] Component unmounted, aborting');
           return;
         }
         
+        const { data: { session }, error } = result;
         console.log('[AUTH] Session result:', session, 'error:', error);
         
         if (error) {
@@ -68,6 +78,7 @@ function App() {
         }
       } catch (error) {
         console.error('[AUTH] Unexpected error:', error);
+        console.error('[AUTH] Error details:', error.message, error.stack);
       } finally {
         if (mounted) {
           console.log('[AUTH] Auth check complete, setting loading to false');
@@ -77,8 +88,17 @@ function App() {
       }
     };
     
-    // Run auth check
+    // Run auth check with a hard timeout fallback
     initAuth();
+    
+    // Absolute fallback - if still loading after 10 seconds, force stop
+    const fallbackTimeout = setTimeout(() => {
+      if (loading && mounted) {
+        console.error('[AUTH] Hard timeout reached (10s), forcing loading to stop');
+        setLoading(false);
+        setAuthChecked(true);
+      }
+    }, 10000);
     
     // Set up auth listener
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -108,6 +128,7 @@ function App() {
 
     return () => {
       mounted = false;
+      clearTimeout(fallbackTimeout);
       authListener.subscription.unsubscribe();
     };
   }, [authChecked]);

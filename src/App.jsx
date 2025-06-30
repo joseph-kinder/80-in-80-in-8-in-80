@@ -42,36 +42,46 @@ function App() {
   }, [theme]);
 
   useEffect(() => {
+    console.log('[AUTH] Initial useEffect - setting loading to true');
     setLoading(true);
     supabase.auth.getSession()
       .then(async ({ data: { session } }) => {
+        console.log('[AUTH] getSession result:', session);
         try {
           if (session?.user) {
+            console.log('[AUTH] Session found, loading user data');
             await loadUserData(session.user);
+          } else {
+            console.log('[AUTH] No session found');
           }
         } catch (error) {
-          console.error('Error loading user data on initial load:', error);
+          console.error('[AUTH] Error loading user data on initial load:', error);
         } finally {
+          console.log('[AUTH] Initial load complete - setting loading to false');
           setLoading(false);
         }
       })
       .catch((error) => {
-        console.error('Error getting session:', error);
+        console.error('[AUTH] Error getting session:', error);
         setLoading(false);
       });
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AUTH] Auth state changed:', event, session?.user?.id);
       if (event === 'SIGNED_IN' && session?.user) {
+        console.log('[AUTH] SIGNED_IN event - setting loading to true');
         setLoading(true);
         try {
           await loadUserData(session.user);
         } catch (error) {
-          console.error('Error loading user data on auth change:', error);
+          console.error('[AUTH] Error loading user data on auth change:', error);
         } finally {
+          console.log('[AUTH] SIGNED_IN complete - setting loading to false');
           setLoading(false);
         }
       }
       if (event === 'SIGNED_OUT') {
+        console.log('[AUTH] SIGNED_OUT event');
         setUser(null);
         setProgress({});
         setGamificationData(initializeGamification());
@@ -87,11 +97,14 @@ function App() {
   }, []);
 
   const loadUserData = async (authUser) => {
+    console.log('[LOAD USER DATA] Starting to load user data for:', authUser.id);
     try {
       let profile = await getProfile(authUser.id);
+      console.log('[LOAD USER DATA] Profile result:', profile);
       
       // If no profile exists (e.g., Google sign-in), create one
       if (!profile) {
+        console.log('[LOAD USER DATA] No profile found, creating new one');
         const username = authUser.user_metadata?.full_name || authUser.email.split('@')[0];
         const { error: createError } = await supabase.rpc('create_user_profile', {
           user_id: authUser.id,
@@ -101,21 +114,27 @@ function App() {
         
         if (!createError) {
           profile = await getProfile(authUser.id);
+          console.log('[LOAD USER DATA] New profile created:', profile);
+        } else {
+          console.error('[LOAD USER DATA] Error creating profile:', createError);
         }
       }
       
       if (profile) {
+        console.log('[LOAD USER DATA] Loading user progress');
         const userProgress = await getProgress(authUser.id);
         
         // Try to load gamification data, but don't fail if columns don't exist
         let userGamification;
         try {
+          console.log('[LOAD USER DATA] Loading gamification data');
           userGamification = await getGamificationData(authUser.id);
         } catch (gamError) {
-          console.warn('Gamification data not available, using defaults:', gamError);
+          console.warn('[LOAD USER DATA] Gamification data not available, using defaults:', gamError);
           userGamification = initializeGamification();
         }
         
+        console.log('[LOAD USER DATA] Setting user state');
         setUser({
           id: authUser.id,
           email: authUser.email,
@@ -131,11 +150,13 @@ function App() {
         if (userGamification.selectedTheme) {
           setTheme(userGamification.selectedTheme);
         }
+        console.log('[LOAD USER DATA] User data loaded successfully');
       }
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('[LOAD USER DATA] Error loading user data:', error);
       // If profile doesn't exist, redirect to a profile setup page
       // For now, create a default profile
+      console.log('[LOAD USER DATA] Creating default user profile');
       setUser({
         id: authUser.id,
         email: authUser.email,
@@ -150,6 +171,7 @@ function App() {
   const handleLogin = async (userData) => {
     // Don't update state if we're already loading
     // The auth state change will handle everything
+    console.log('[HANDLE LOGIN] Called but doing nothing - auth state change will handle it');
     return;
   };
 
@@ -299,10 +321,12 @@ function App() {
   };
 
   if (loading) {
+    console.log('[RENDER] Showing loading screen - loading:', loading, 'user:', user);
     return <div className="loading">Loading system</div>;
   }
 
   if (!user) {
+    console.log('[RENDER] Showing login screen - loading:', loading, 'user:', user);
     return (
       <>
         <button className="theme-toggle" onClick={toggleTheme}>
@@ -312,6 +336,8 @@ function App() {
       </>
     );
   }
+
+  console.log('[RENDER] Showing main app - loading:', loading, 'user:', user);
 
   return (
     <Router>

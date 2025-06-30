@@ -12,13 +12,16 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
+    console.log('[LOGIN] Google sign-in clicked');
     setError('');
     setLoading(true);
     
     try {
       await signInWithGoogle();
+      console.log('[LOGIN] Google sign-in initiated, waiting for redirect');
       // The redirect will handle the rest
     } catch (err) {
+      console.error('[LOGIN] Google sign-in error:', err);
       setError(err.message);
       setLoading(false);
     }
@@ -26,6 +29,7 @@ function Login({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('[LOGIN] Form submitted - isSignUp:', isSignUp);
     setError('');
     setLoading(true);
 
@@ -36,8 +40,10 @@ function Login({ onLogin }) {
           throw new Error('All fields are required');
         }
         
+        console.log('[LOGIN] Signing up new user');
         const { user } = await signUp(email, password, username, parseInt(baselineScore));
         if (user) {
+          console.log('[LOGIN] Sign up successful, calling onLogin');
           onLogin({
             id: user.id,
             email: user.email,
@@ -48,11 +54,14 @@ function Login({ onLogin }) {
         }
       } else {
         // Sign in
+        console.log('[LOGIN] Signing in existing user');
         const { user } = await signIn(email, password);
         if (user) {
+          console.log('[LOGIN] Sign in successful, fetching profile');
           // Fetch user profile
           const { getProfile } = await import('../lib/supabase');
           const profile = await getProfile(user.id);
+          console.log('[LOGIN] Profile fetched:', profile);
           onLogin({
             id: user.id,
             email: user.email,
@@ -63,6 +72,7 @@ function Login({ onLogin }) {
         }
       }
     } catch (err) {
+      console.error('[LOGIN] Error:', err);
       setError(err.message);
     } finally {
       setLoading(false);

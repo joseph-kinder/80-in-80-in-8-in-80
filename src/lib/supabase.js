@@ -8,7 +8,31 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE
 console.log('[SUPABASE] Initializing with URL:', supabaseUrl);
 console.log('[SUPABASE] URL is placeholder?', supabaseUrl === 'YOUR_SUPABASE_URL');
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Check if we have valid credentials
+if (supabaseUrl === 'YOUR_SUPABASE_URL' || !supabaseUrl || !supabaseAnonKey) {
+  console.error('[SUPABASE] ERROR: Invalid Supabase credentials! Please check your .env file');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'x-client-info': '80-in-80-app'
+    }
+  },
+  db: {
+    schema: 'public'
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 2
+    }
+  }
+})
 
 // Test the connection
 supabase.auth.getSession()
@@ -104,19 +128,44 @@ export const signOut = async () => {
 }
 
 export const getProfile = async (userId) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
+  console.log('[SUPABASE] Getting profile for user:', userId);
   
-  if (error && error.code === 'PGRST116') {
-    // No profile found
-    return null
+  try {
+    // Add a timeout wrapper
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+    );
+    
+    const fetchPromise = supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+    
+    if (error && error.code === 'PGRST116') {
+      // No profile found
+      console.log('[SUPABASE] No profile found for user:', userId);
+      return null
+    }
+    
+    if (error) {
+      console.error('[SUPABASE] Error getting profile:', error);
+      throw error
+    }
+    
+    console.log('[SUPABASE] Profile found:', data);
+    return data
+  } catch (error) {
+    console.error('[SUPABASE] Unexpected error in getProfile:', error);
+    // If it's a timeout, return null instead of throwing
+    if (error.message === 'Profile fetch timeout') {
+      console.log('[SUPABASE] Profile fetch timed out, returning null');
+      return null;
+    }
+    throw error;
   }
-  
-  if (error) throw error
-  return data
 }
 
 export const updateProgress = async (userId, day, progressData) => {
@@ -133,20 +182,36 @@ export const updateProgress = async (userId, day, progressData) => {
 }
 
 export const getProgress = async (userId) => {
-  const { data, error } = await supabase
-    .from('progress')
-    .select('*')
-    .eq('user_id', userId)
+  console.log('[SUPABASE] Getting progress for user:', userId);
   
-  if (error) throw error
-  
-  // Convert to object format
-  const progressObj = {}
-  data.forEach(item => {
-    progressObj[item.day] = item.data
-  })
-  
-  return progressObj
+  try {
+    const { data, error } = await supabase
+      .from('progress')
+      .select('*')
+      .eq('user_id', userId)
+    
+    if (error) {
+      console.error('[SUPABASE] Error getting progress:', error);
+      throw error
+    }
+    
+    // Convert to object format
+    const progressObj = {}
+    if (data && data.length > 0) {
+      data.forEach(item => {
+        progressObj[item.day] = item.data
+      })
+      console.log('[SUPABASE] Progress found:', Object.keys(progressObj).length, 'days');
+    } else {
+      console.log('[SUPABASE] No progress found for user');
+    }
+    
+    return progressObj
+  } catch (error) {
+    console.error('[SUPABASE] Unexpected error in getProgress:', error);
+    // Return empty object instead of throwing to prevent app crash
+    return {};
+  }
 }
 
 export const updateCurrentDay = async (userId, currentDay) => {

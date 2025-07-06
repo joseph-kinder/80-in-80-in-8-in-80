@@ -94,19 +94,17 @@ function App() {
     console.log('[LOAD USER DATA] Loading for:', authUser.id);
     
     try {
-      // Try to get profile with timeout
+      // Try to get profile
       let profile = null;
       try {
-        const profilePromise = getProfile(authUser.id);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 5000)
-        );
-        profile = await Promise.race([profilePromise, timeoutPromise]);
+        profile = await getProfile(authUser.id);
       } catch (err) {
-        console.log('[LOAD USER DATA] Profile fetch failed:', err.message);
+        // This catch is primarily for unexpected errors from getProfile,
+        // as timeout/not found are handled by getProfile returning null.
+        console.log('[LOAD USER DATA] Profile fetch encountered an error:', err.message);
       }
       
-      // If no profile, create minimal one
+      // If no profile (either not found or timed out), create minimal one
       if (!profile) {
         const username = authUser.user_metadata?.full_name || 
                         authUser.user_metadata?.name || 

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Debug - 80 in 80</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0a0;
+        }
+        .log {
+            background: #111;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #0f0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .info { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>AUTH DEBUG CONSOLE</h1>
+    
+    <div>
+        <button onclick="checkSession()">Check Session</button>
+        <button onclick="testGoogleLogin()">Test Google Login</button>
+        <button onclick="signOut()">Sign Out</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+    
+    <h2>Current Status:</h2>
+    <div id="status">Loading...</div>
+    
+    <h2>Logs:</h2>
+    <div id="logs" class="log"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+        
+        const supabaseUrl = 'https://egsgftvpuzyexqupvzqn.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnc2dmdHZwdXp5ZXhxdXB2enFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4MDQ3NDMsImV4cCI6MjA2NjM4MDc0M30.E-H5vbNfrZeiWEQhTg2MX-AuMd01Qm1O-l7ONR9A9Co';
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.textContent = `[${time}] ${message}`;
+            logs.appendChild(entry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        async function updateStatus() {
+            const status = document.getElementById('status');
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                
+                if (session) {
+                    status.innerHTML = `
+                        <div class="success">AUTHENTICATED</div>
+                        <div>User ID: ${session.user.id}</div>
+                        <div>Email: ${session.user.email}</div>
+                        <div>Provider: ${session.user.app_metadata.provider}</div>
+                    `;
+                } else {
+                    status.innerHTML = '<div class="error">NOT AUTHENTICATED</div>';
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="error">ERROR: ${error.message}</div>`;
+            }
+        }
+        
+        window.checkSession = async function() {
+            log('Checking session...');
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                
+                if (session) {
+                    log('Session found!', 'success');
+                    log(`User: ${session.user.email}`);
+                    log(`Provider: ${session.user.app_metadata.provider}`);
+                } else {
+                    log('No active session', 'error');
+                }
+                updateStatus();
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        window.testGoogleLogin = async function() {
+            log('Initiating Google login...');
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth-debug.html'
+                    }
+                });
+                
+                if (error) throw error;
+                log('Google login initiated - redirecting...', 'success');
+            } catch (error) {
+                log(`Google login error: ${error.message}`, 'error');
+            }
+        }
+        
+        window.signOut = async function() {
+            log('Signing out...');
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                log('Signed out successfully', 'success');
+                updateStatus();
+            } catch (error) {
+                log(`Sign out error: ${error.message}`, 'error');
+            }
+        }
+        
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '';
+            log('Logs cleared');
+        }
+        
+        // Set up auth state listener
+        supabase.auth.onAuthStateChange((event, session) => {
+            log(`Auth state changed: ${event}`, event === 'SIGNED_IN' ? 'success' : 'info');
+            if (session) {
+                log(`User: ${session.user.email}`);
+            }
+            updateStatus();
+        });
+        
+        // Initial check
+        checkSession();
+    </script>
+</body>
+</html>

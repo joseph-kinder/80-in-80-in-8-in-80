@@ -50,22 +50,14 @@ function App() {
       try {
         console.log('[AUTH] Getting session...');
         
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Session check timed out after 5 seconds')), 5000);
-        });
-        
-        // Race between getSession and timeout
-        const sessionPromise = supabase.auth.getSession();
-        
-        const result = await Promise.race([sessionPromise, timeoutPromise]);
+        // Don't use timeout for initial session check - let it complete naturally
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) {
           console.log('[AUTH] Component unmounted, aborting');
           return;
         }
         
-        const { data: { session }, error } = result;
         console.log('[AUTH] Session result:', session, 'error:', error);
         
         if (error) {
@@ -88,39 +80,33 @@ function App() {
       }
     };
     
-    // Run auth check with a hard timeout fallback
+    // Run auth check
     initAuth();
     
-    // Absolute fallback - if still loading after 10 seconds, force stop
-    const fallbackTimeout = setTimeout(() => {
-      if (loading && mounted) {
-        console.error('[AUTH] Hard timeout reached (10s), forcing loading to stop');
-        setLoading(false);
-        setAuthChecked(true);
-      }
-    }, 10000);
-    
-    // Set up auth listener
+    // Set up auth listener IMMEDIATELY, not after auth check
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AUTH] Auth state changed:', event, session?.user?.id);
       
-      if (!authChecked) {
-        console.log('[AUTH] Ignoring auth change - initial check not complete');
-        return;
-      }
-      
+      // Handle auth changes immediately, don't wait for initial check
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('[AUTH] SIGNED_IN event - loading user data');
+        setLoading(true); // Show loading while we fetch user data
         try {
           await loadUserData(session.user);
         } catch (error) {
           console.error('[AUTH] Error loading user data on auth change:', error);
+        } finally {
+          setLoading(false);
         }
       } else if (event === 'SIGNED_OUT') {
         console.log('[AUTH] SIGNED_OUT event');
         setUser(null);
         setProgress({});
         setGamificationData(initializeGamification());
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('[AUTH] Token refreshed');
+      } else if (event === 'USER_UPDATED') {
+        console.log('[AUTH] User updated');
       }
     });
 
@@ -128,10 +114,9 @@ function App() {
 
     return () => {
       mounted = false;
-      clearTimeout(fallbackTimeout);
       authListener.subscription.unsubscribe();
     };
-  }, [authChecked]);
+  }, []); // Remove authChecked dependency to prevent re-runs
 
   const loadUserData = async (authUser) => {
     console.log('[LOAD USER DATA] Starting to load user data for:', authUser.id);
@@ -142,18 +127,48 @@ function App() {
       // If no profile exists (e.g., Google sign-in), create one
       if (!profile) {
         console.log('[LOAD USER DATA] No profile found, creating new one');
-        const username = authUser.user_metadata?.full_name || authUser.email.split('@')[0];
-        const { error: createError } = await supabase.rpc('create_user_profile', {
-          user_id: authUser.id,
-          user_name: username,
-          user_baseline_score: 40 // Default baseline for Google users
-        });
+        const username = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email.split('@')[0];
         
-        if (!createError) {
-          profile = await getProfile(authUser.id);
-          console.log('[LOAD USER DATA] New profile created:', profile);
-        } else {
-          console.error('[LOAD USER DATA] Error creating profile:', createError);
+        try {
+          const { error: createError } = await supabase.rpc('create_user_profile', {
+            user_id: authUser.id,
+            user_name: username,
+            user_baseline_score: 40 // Default baseline for Google users
+          });
+          
+          if (!createError) {
+            profile = await getProfile(authUser.id);
+            console.log('[LOAD USER DATA] New profile created:', profile);
+          } else {
+            console.error('[LOAD USER DATA] RPC creation error:', createError);
+            throw createError;
+          }
+        } catch (rpcError) {
+          console.error('[LOAD USER DATA] RPC failed, trying direct insert:', rpcError);
+          
+          // Try direct insert as fallback
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authUser.id,
+              username,
+              baseline_score: 40,
+              current_day: 1
+            });
+          
+          if (insertError) {
+            console.error('[LOAD USER DATA] Direct insert also failed:', insertError);
+            // Create a minimal user profile to allow access
+            console.log('[LOAD USER DATA] Using fallback profile');
+            profile = {
+              username,
+              baseline_score: 40,
+              current_day: 1
+            };
+          } else {
+            // Fetch the created profile
+            profile = await getProfile(authUser.id);
+          }
         }
       }
       
@@ -206,10 +221,11 @@ function App() {
   };
 
   const handleLogin = async (userData) => {
-    // Don't update state if we're already loading
-    // The auth state change will handle everything
-    console.log('[HANDLE LOGIN] Called but doing nothing - auth state change will handle it');
-    return;
+    // The auth state change listener will handle everything
+    // This function is called by the Login component but we don't need to do anything here
+    console.log('[HANDLE LOGIN] Called with userData:', userData);
+    // Just wait a moment for the auth state change to propagate
+    setLoading(true);
   };
 
   const handleLogout = async () => {

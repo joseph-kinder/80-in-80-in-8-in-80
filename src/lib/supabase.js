@@ -76,14 +76,25 @@ export const signInWithGoogle = async () => {
   // Use environment variable for production URL, fallback to current origin for development
   const redirectUrl = import.meta.env.VITE_APP_URL || window.location.origin
   
+  console.log('[GOOGLE AUTH] Initiating sign in with redirect URL:', redirectUrl);
+  
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: redirectUrl
+      redirectTo: redirectUrl,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      }
     }
   })
   
-  if (error) throw error
+  if (error) {
+    console.error('[GOOGLE AUTH] Sign in error:', error);
+    throw error;
+  }
+  
+  console.log('[GOOGLE AUTH] Sign in initiated:', data);
   return data
 }
 

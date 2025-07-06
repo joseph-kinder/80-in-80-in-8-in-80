@@ -138,7 +138,7 @@ export const getProfile = async (userId) => {
     
     const fetchPromise = supabase
       .from('profiles')
-      .select('*')
+      .select('id, username, baseline_score, current_day')
       .eq('id', userId)
       .single();
     

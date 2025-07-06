@@ -138,7 +138,7 @@ export const getProfile = async (userId) => {
     
     const fetchPromise = supabase
       .from('profiles')
-      .select('*')
+      .select('id, username, baseline_score, current_day')
       .eq('id', userId)
       .single();
     
@@ -183,34 +183,48 @@ export const updateProgress = async (userId, day, progressData) => {
 
 export const getProgress = async (userId) => {
   console.log('[SUPABASE] Getting progress for user:', userId);
+  const defaultProgress = {};
   
   try {
-    const { data, error } = await supabase
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Progress fetch timeout')), 5000)
+    );
+
+    const fetchPromise = supabase
       .from('progress')
       .select('*')
-      .eq('user_id', userId)
-    
+      .eq('user_id', userId);
+
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+
     if (error) {
       console.error('[SUPABASE] Error getting progress:', error);
-      throw error
+      // Differentiate timeout error for specific logging if needed
+      if (error.message === 'Progress fetch timeout') {
+        console.log('[SUPABASE] Progress fetch timed out, returning default.');
+      }
+      return defaultProgress; // Return default on any error including timeout
     }
-    
+
     // Convert to object format
-    const progressObj = {}
+    const progressObj = {};
     if (data && data.length > 0) {
       data.forEach(item => {
-        progressObj[item.day] = item.data
-      })
+        progressObj[item.day] = item.data;
+      });
       console.log('[SUPABASE] Progress found:', Object.keys(progressObj).length, 'days');
     } else {
       console.log('[SUPABASE] No progress found for user');
     }
     
-    return progressObj
+    return progressObj;
   } catch (error) {
+    // This catch handles errors from Promise.race itself or other unexpected errors
     console.error('[SUPABASE] Unexpected error in getProgress:', error);
-    // Return empty object instead of throwing to prevent app crash
-    return {};
+    if (error.message === 'Progress fetch timeout') {
+      console.log('[SUPABASE] Progress fetch timed out (caught in outer block), returning default.');
+    }
+    return defaultProgress;
   }
 }
 
@@ -224,6 +238,28 @@ export const updateCurrentDay = async (userId, currentDay) => {
 }
 
 // Gamification functions
+const defaultGamificationData = {
+  xp: 0,
+  coins: 100,
+  level: 1,
+  achievements: [],
+  purchases: [],
+  stats: {
+    daysCompleted: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    perfectScores: 0,
+    speedDemonCount: 0,
+    highAccuracyDays: 0,
+    taskCompletionDays: 0,
+    lessonsRead: 0,
+    highestMockScore: 0,
+    totalProblems: 0,
+    correctProblems: 0
+  },
+  selectedTheme: 'dark'
+};
+
 export const updateGamification = async (userId, updates) => {
   try {
     const { error } = await supabase
@@ -249,83 +285,48 @@ export const updateGamification = async (userId, updates) => {
 }
 
 export const getGamificationData = async (userId) => {
+  console.log('[SUPABASE] Getting gamification data for user:', userId);
   try {
-    const { data, error } = await supabase
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Gamification data fetch timeout')), 5000)
+    );
+
+    const fetchPromise = supabase
       .from('profiles')
       .select('xp, coins, level, achievements, purchases, gamification_stats, selected_theme')
       .eq('id', userId)
-      .single()
+      .single();
+
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
     
     if (error) {
-      console.warn('Error fetching gamification data:', error);
-      // Return default values if columns don't exist
-      return {
-        xp: 0,
-        coins: 100,
-        level: 1,
-        achievements: [],
-        purchases: [],
-        stats: {
-          daysCompleted: 0,
-          currentStreak: 0,
-          longestStreak: 0,
-          perfectScores: 0,
-          speedDemonCount: 0,
-          highAccuracyDays: 0,
-          taskCompletionDays: 0,
-          lessonsRead: 0,
-          highestMockScore: 0,
-          totalProblems: 0,
-          correctProblems: 0
-        },
-        selectedTheme: 'dark'
-      };
+      console.warn('[SUPABASE] Error fetching gamification data:', error);
+      if (error.message === 'Gamification data fetch timeout') {
+        console.log('[SUPABASE] Gamification data fetch timed out, returning defaults.');
+      }
+      // Return default values if columns don't exist or on any error including timeout
+      return { ...defaultGamificationData };
     }
     
+    // Ensure all parts of the default object are present if data is partial
+    const fetchedStats = data.gamification_stats || {};
+    const mergedStats = { ...defaultGamificationData.stats, ...fetchedStats };
+
     return {
-      xp: data.xp || 0,
-      coins: data.coins || 100,
-      level: data.level || 1,
-      achievements: data.achievements || [],
-      purchases: data.purchases || [],
-      stats: data.gamification_stats || {
-        daysCompleted: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        perfectScores: 0,
-        speedDemonCount: 0,
-        highAccuracyDays: 0,
-        taskCompletionDays: 0,
-        lessonsRead: 0,
-        highestMockScore: 0,
-        totalProblems: 0,
-        correctProblems: 0
-      },
-      selectedTheme: data.selected_theme || 'dark'
+      xp: data.xp || defaultGamificationData.xp,
+      coins: data.coins || defaultGamificationData.coins,
+      level: data.level || defaultGamificationData.level,
+      achievements: data.achievements || defaultGamificationData.achievements,
+      purchases: data.purchases || defaultGamificationData.purchases,
+      stats: mergedStats,
+      selectedTheme: data.selected_theme || defaultGamificationData.selectedTheme
     };
   } catch (error) {
-    console.error('Error in getGamificationData:', error);
+    console.error('[SUPABASE] Unexpected error in getGamificationData:', error);
+    if (error.message === 'Gamification data fetch timeout') {
+      console.log('[SUPABASE] Gamification data fetch timed out (caught in outer block), returning defaults.');
+    }
     // Return defaults on any error
-    return {
-      xp: 0,
-      coins: 100,
-      level: 1,
-      achievements: [],
-      purchases: [],
-      stats: {
-        daysCompleted: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        perfectScores: 0,
-        speedDemonCount: 0,
-        highAccuracyDays: 0,
-        taskCompletionDays: 0,
-        lessonsRead: 0,
-        highestMockScore: 0,
-        totalProblems: 0,
-        correctProblems: 0
-      },
-      selectedTheme: 'dark'
-    };
+    return { ...defaultGamificationData };
   }
 }

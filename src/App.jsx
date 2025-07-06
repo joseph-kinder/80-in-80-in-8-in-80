@@ -91,50 +91,74 @@ function App() {
     };
   }, []);
   const loadUserDataSafely = async (authUser) => {
-    console.log('[LOAD USER DATA] Loading for:', authUser.id);
+    console.log(`[LOAD USER DATA] Starting for user: ${authUser.id}`);
     
     try {
-      // Try to get profile with timeout
+      console.log('[LOAD USER DATA] Attempting to get profile...');
       let profile = null;
       try {
-        const profilePromise = getProfile(authUser.id);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 5000)
-        );
-        profile = await Promise.race([profilePromise, timeoutPromise]);
+        profile = await getProfile(authUser.id);
+        console.log('[LOAD USER DATA] getProfile returned:', profile);
       } catch (err) {
-        console.log('[LOAD USER DATA] Profile fetch failed:', err.message);
+        console.error('[LOAD USER DATA] Error during getProfile call:', err.message, err);
+        // Ensure profile is null if there was an error
+        profile = null; 
       }
       
-      // If no profile, create minimal one
       if (!profile) {
+        console.log('[LOAD USER DATA] Profile not found or fetch failed. Creating minimal local profile.');
         const username = authUser.user_metadata?.full_name || 
                         authUser.user_metadata?.name || 
-                        authUser.email.split('@')[0];
+                        (authUser.email ? authUser.email.split('@')[0] : 'guest');
         
         profile = {
           id: authUser.id,
           username,
-          baseline_score: 40,
-          current_day: 1
+          baseline_score: 40, // Default value
+          current_day: 1    // Default value
         };
         
-        // Try to save it but don't wait
+        console.log('[LOAD USER DATA] Minimal profile created:', profile);
+        console.log('[LOAD USER DATA] Attempting to save minimal profile to Supabase (no await)...');
         supabase.from('profiles').insert({
           id: authUser.id,
-          username,
-          baseline_score: 40,
-          current_day: 1
+          username: profile.username, // Use the derived username
+          baseline_score: profile.baseline_score,
+          current_day: profile.current_day
         }).then(result => {
-          console.log('[LOAD USER DATA] Profile save result:', result.error || 'Success');
+          if (result.error) {
+            console.error('[LOAD USER DATA] Minimal profile save ERROR:', result.error);
+          } else {
+            console.log('[LOAD USER DATA] Minimal profile save SUCCESS.');
+          }
+        }).catch(saveError => {
+            console.error('[LOAD USER DATA] Exception during minimal profile save:', saveError);
         });
+      } else {
+        console.log('[LOAD USER DATA] Profile successfully fetched:', profile);
       }
       
-      // Load other data with timeouts
-      const userProgress = await getProgress(authUser.id).catch(() => ({}));
-      const userGamification = await getGamificationData(authUser.id).catch(() => initializeGamification());
+      console.log('[LOAD USER DATA] Attempting to get progress data...');
+      let userProgress = {};
+      try {
+        userProgress = await getProgress(authUser.id);
+        console.log('[LOAD USER DATA] getProgress returned:', userProgress);
+      } catch (err) {
+        console.error('[LOAD USER DATA] Error during getProgress call:', err.message, err);
+        userProgress = {}; // Fallback to empty object
+      }
       
-      // Set user state
+      console.log('[LOAD USER DATA] Attempting to get gamification data...');
+      let userGamification = initializeGamification(); // Initialize with defaults
+      try {
+        userGamification = await getGamificationData(authUser.id);
+        console.log('[LOAD USER DATA] getGamificationData returned:', userGamification);
+      } catch (err) {
+        console.error('[LOAD USER DATA] Error during getGamificationData call:', err.message, err);
+        userGamification = initializeGamification(); // Fallback to defaults
+      }
+      
+      console.log('[LOAD USER DATA] Setting user state...');
       setUser({
         id: authUser.id,
         email: authUser.email,
